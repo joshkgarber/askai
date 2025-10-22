@@ -10,5 +10,5 @@ ANSWER=$(curl --silent https://api.openai.com/v1/responses \
     -d "{\"model\": \"gpt-4.1-nano\", \"input\": \"$QUESTION\"}" \
     | jq -r '.output[0].content[0].text')
 
-echo $ANSWER
+echo "$ANSWER"
 
