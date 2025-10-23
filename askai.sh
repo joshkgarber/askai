@@ -1,11 +1,22 @@
 #!/usr/bin/env bash
 
-MODEL="gpt-4.1-nano"
+MODEL=""
 
 while [[ $# -gt 0 ]]; do
     case $1 in
         -m|--model)
-            MODEL="$2"
+            case $2 in
+                "gpt-4.1-mini")
+                    MODEL="$2"
+                ;;
+                "gpt-4.1-nano")
+                    MODEL="$2"
+                ;;
+                *)
+                    echo "Unknown model: $2"
+                    exit 1
+                ;;
+            esac
             shift 2
             ;;
         *)
@@ -14,6 +25,10 @@ while [[ $# -gt 0 ]]; do
             ;;
     esac
 done
+
+if [[ -z "$MODEL" ]]; then
+    MODEL="gpt-4.1-nano"
+fi
 
 echo "Hello, how can I help?"
 
