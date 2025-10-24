@@ -34,11 +34,10 @@ echo "Hello, how can I help?"
 
 read -r QUESTION
 
-ANSWER=$(curl --silent https://api.openai.com/v1/responses \
+RESPONSE=$(curl --silent https://api.openai.com/v1/responses \
     -H "Content-Type: application/json" \
     -H "Authorization: Bearer $OPENAI_API_KEY" \
-    -d "{\"model\": \"$MODEL\", \"input\": \"$QUESTION\"}" \
-    | jq -r '.output[0].content[0].text')
+    -d "{\"model\": \"$MODEL\", \"input\": \"$QUESTION\"}")
 
-echo "$ANSWER"
+echo "$RESPONSE" | jq -r '.output[0].content[0].text'
 
