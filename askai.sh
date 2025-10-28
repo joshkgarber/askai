@@ -15,6 +15,10 @@ while [[ $# -gt 0 ]]; do
                     MODEL="$2"
                     PROVIDER="openai"
                 ;;
+                "claude-haiku-4-5")
+                    MODEL="$2"
+                    PROVIDER="anthropic"
+                ;;
                 *)
                     echo "Unknown model: $2"
                     exit 1
@@ -45,10 +49,31 @@ openai_request() {
     echo "$response" | jq -r '.output[0].content[0].text'
 }
 
+anthropic_request() {
+	local response=$(curl --silent https://api.anthropic.com/v1/messages \
+        -H "Content-Type: application/json" \
+        -H "x-api-key: $ANTHROPIC_API_KEY" \
+        -H "anthropic-version: 2023-06-01" \
+        -d "{
+        \"model\": \"$MODEL\",
+        \"max_tokens\": 1000,
+        \"messages\": [
+          {
+            \"role\": \"user\", 
+            \"content\": \"$QUESTION\"
+          }
+        ]
+        }")
+	echo "$response" | jq -r '.content[0].text'
+}
+
 RESPONSE=""
 case $PROVIDER in
     "openai")
         RESPONSE=$(openai_request)
+        ;;
+    "anthropic")
+        RESPONSE=$(anthropic_request)
         ;;
     *)
         echo "Unknown provider: $PROVIDER"
