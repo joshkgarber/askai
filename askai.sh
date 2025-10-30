@@ -1,5 +1,21 @@
 #!/usr/bin/env bash
 
+show_usage() {
+  echo ""
+  echo -e "\033[1;32mUsage:\033[0m $0 [OPTIONS]"
+  echo ""
+  echo -e "\033[1;32mOptions:\033[0m"
+  echo -e "  \033[1m--help\033[0m                show this help text"
+  echo -e "  \033[1m-m --model\033[0m <model>    choose a model"
+  echo ""
+  echo -e "\033[1;32mModels:\033[0m"
+  echo -e "  \033[1mmini\033[0m    OpenAI ChatGPT 4.1 mini"
+  echo -e "  \033[1mnano\033[0m    OpenAI ChatGPT 4.1 nano"
+  echo -e "  \033[1mhaiku\033[0m   Anthropic Claude 4.5 haiku"
+  echo ""
+  echo -e "The defalt model is \033[1mnano\033[0m"
+}
+
 MODEL=""
 PROVIDER=""
 
@@ -25,6 +41,10 @@ while [[ $# -gt 0 ]]; do
         ;;
       esac
       shift 2
+      ;;
+    --help)
+      show_usage
+      exit 0
       ;;
     *)
       echo "Unknown option: $1"
