@@ -7,7 +7,7 @@ show_usage() {
   echo -e "\033[1;32mOptions:\033[0m"
   echo -e "  \033[1m--help\033[0m                   show this help text"
   echo -e "  \033[1m-m --model\033[0m <model>       choose a model"
-  echo -e "  \033[1m-i --instruct\033[0m <string>   set system instructions (openai models only)"
+  echo -e "  \033[1m-i --instruct\033[0m <string>   set system instructions"
   echo ""
   echo -e "\033[1;32mModels:\033[0m"
   echo -e "  \033[1mmini\033[0m    OpenAI ChatGPT 4.1 mini"
@@ -68,10 +68,6 @@ if [[ -z "$MODEL" ]]; then
   PROVIDER="openai"
 fi
 
-if [ -n "$SYSTEM_INSTRUCTION" ] && [ "$PROVIDER" == "anthropic" ]; then
-  echo "INFO: system instructions not supported for anthropic models. Run \`$0 --help\`."
-fi
-
 echo "Hello, how can I help?"
 read -r QUESTION
 
@@ -89,15 +85,17 @@ anthropic_request() {
     -H "x-api-key: $ANTHROPIC_API_KEY" \
     -H "anthropic-version: 2023-06-01" \
     -d "{
-      \"model\": \"$MODEL\",
-      \"max_tokens\": 1000,
-      \"messages\": [
-        {
-          \"role\": \"user\", 
-          \"content\": \"$QUESTION\"
-        }
-      ]
-    }")
+          \"model\": \"$MODEL\",
+          \"max_tokens\": 1000,
+          \"system\": \"$SYSTEM_INSTRUCTION\",
+          \"messages\": [
+            {
+              \"role\": \"user\",
+              \"content\": \"$QUESTION\"
+            }
+          ]
+        }"
+  )
 	echo "$response" | jq -r '.content[0].text'
 }
 
