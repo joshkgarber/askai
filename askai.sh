@@ -17,16 +17,18 @@ show_usage() {
   echo -e "The defalt model is \033[1mnano\033[0m"
 }
 
-MODEL=""
+MODEL_CODE=""
+MODEL_ALIAS=""
 PROVIDER=""
 SYSTEM_INSTRUCTION=""
 
 while [[ $# -gt 0 ]]; do
   case $1 in
     -m|--model)
+      MODEL_ALIAS="$2"
       case $2 in
         "mini")
-          MODEL="gpt-4.1-mini"
+          MODEL_CODE="gpt-4.1-mini"
           PROVIDER="openai"
         ;;
         "nano")
@@ -65,10 +67,11 @@ done
 
 if [[ -z "$MODEL" ]]; then
   MODEL="gpt-4.1-nano"
+  MODEL_ALIAS="nano"
   PROVIDER="openai"
 fi
 
-echo "Hello, how can I help?"
+echo -e "\033[1m$MODEL_ALIAS\n\033[0mHello, how can I help?\n\n\033[1myou\033[0m"
 read -r QUESTION
 
 openai_request() {
@@ -113,5 +116,5 @@ case $PROVIDER in
     ;;
 esac
 
-echo "$RESPONSE"
+echo -e "\n\033[1m$MODEL_ALIAS\033[0m\n$RESPONSE"
 
