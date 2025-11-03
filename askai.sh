@@ -5,9 +5,10 @@ show_usage() {
   echo -e "\033[1;32mUsage:\033[0m $0 [OPTIONS]"
   echo ""
   echo -e "\033[1;32mOptions:\033[0m"
-  echo -e "  \033[1m--help\033[0m                   show this help text"
-  echo -e "  \033[1m-m --model\033[0m <model>       choose a model"
-  echo -e "  \033[1m-i --instruct\033[0m <string>   set system instructions"
+  echo -e "  \033[1m--help\033[0m                     show this help text"
+  echo -e "  \033[1m-m --model\033[0m <model>         choose a model"
+  echo -e "  \033[1m-i --instruct\033[0m <string>     set system instructions"
+  echo -e "  \033[1m-t --maxtokens\033[0m <integer>   set the max tokens for the response"
   echo ""
   echo -e "\033[1;32mModels:\033[0m"
   echo -e "  \033[1mmini\033[0m    OpenAI ChatGPT 4.1 mini"
@@ -15,12 +16,14 @@ show_usage() {
   echo -e "  \033[1mhaiku\033[0m   Anthropic Claude 4.5 haiku"
   echo ""
   echo -e "The defalt model is \033[1mnano\033[0m"
+  echo -e "The defalt max tokens is \033[1m1024\033[0m"
 }
 
 MODEL_CODE=""
 MODEL_ALIAS=""
 PROVIDER=""
 SYSTEM_INSTRUCTION=""
+MAX_TOKENS=1024
 
 while [[ $# -gt 0 ]]; do
   case $1 in
@@ -54,6 +57,14 @@ while [[ $# -gt 0 ]]; do
       SYSTEM_INSTRUCTION="$2"
       shift 2
       ;;
+    -t|--maxtokens)
+      if [[ -z "$2" ]]; then
+        echo "Missing max tokens integer argument."
+        exit 1
+      fi
+      MAX_TOKENS=$2
+      shift 2
+      ;;
     --help)
       show_usage
       exit 0
@@ -78,7 +89,13 @@ openai_request() {
   local response=$(curl --silent https://api.openai.com/v1/responses \
     -H "Content-Type: application/json" \
     -H "Authorization: Bearer $OPENAI_API_KEY" \
-    -d "{\"model\": \"$MODEL\", \"input\": \"$QUESTION\", \"instructions\": \"$SYSTEM_INSTRUCTION\"}")
+    -d "{
+          \"model\": \"$MODEL\",
+          \"input\": \"$QUESTION\",
+          \"instructions\": \"$SYSTEM_INSTRUCTION\",
+          \"max_output_tokens\": $MAX_TOKENS
+        }"
+  )
   echo "$response" | jq -r '.output[0].content[0].text'
 }
 
@@ -89,7 +106,7 @@ anthropic_request() {
     -H "anthropic-version: 2023-06-01" \
     -d "{
           \"model\": \"$MODEL\",
-          \"max_tokens\": 1000,
+          \"max_tokens\": $MAX_TOKENS,
           \"system\": \"$SYSTEM_INSTRUCTION\",
           \"messages\": [
             {
