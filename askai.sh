@@ -74,8 +74,10 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-echo -e "\033[1m$MODEL_ALIAS\n\033[0mHello, how can I help?\n\n\033[1myou\033[0m"
-read -r QUESTION
+echo -e "\033[1m$MODEL_ALIAS\033[0m"
+echo "Hello, how can I help?" | glow -
+echo -e "\033[1myou\033[0m\n"
+read -r -p "  " QUESTION
 
 openai_request() {
   local response=$(curl --silent https://api.openai.com/v1/responses \
@@ -125,5 +127,6 @@ case $PROVIDER in
     ;;
 esac
 
-echo -e "\n\033[1m$MODEL_ALIAS\033[0m\n$RESPONSE"
+echo -e "\n\033[1m$MODEL_ALIAS\033[0m"
+echo "$RESPONSE" | glow -
 
