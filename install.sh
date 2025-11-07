@@ -2,6 +2,12 @@
 
 set -e  # Exit on error
 
+# Check dependency
+if [ command -v glow &> /dev/null ]; then
+  echo "Error: glow is not installed. See installation instructions at https://github.com/charmbracelet/glow"
+  exit 1
+fi
+
 # Configuration
 SCRIPT_NAME="askai"
 INSTALL_DIR="${1:-/home/$USER/.local/bin}"  # Allow custom install directory
