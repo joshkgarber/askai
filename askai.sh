@@ -7,20 +7,24 @@ show_usage() {
   echo -e "\033[1;32mOptions:\033[0m"
   echo -e "  \033[1m--help\033[0m                     show this help text"
   echo -e "  \033[1m-m --model\033[0m <model>         choose a model (default: \033[1mnano\033[0m)"
-  echo -e "  \033[1m-i --instruct\033[0m <string>     set system instructions (default: \033[1m\"You are a helpful assistant.\"\033[0m)"
+  echo -e "  \033[1m-i --instruct\033[0m <string>     set system instructions (see note below)"
   echo -e "  \033[1m-t --maxtokens\033[0m <integer>   set the max tokens for the response (default: \033[1m1024\033[0m)"
   echo ""
   echo -e "\033[1;32mModels:\033[0m"
   echo -e "  \033[1mmini\033[0m    OpenAI ChatGPT 4.1 mini"
   echo -e "  \033[1mnano\033[0m    OpenAI ChatGPT 4.1 nano"
   echo -e "  \033[1mhaiku\033[0m   Anthropic Claude 4.5 haiku"
+  echo ""
+  echo -e "\033[1;32mNote:\033[0m"
+  echo -e "The default system instruction is: **\"This is a one-shot prompt, so don't ask the user any follow-up questions. Simply provide a response to the user's question. Further instructions: You are a helpful assistant.\"**\n\nYour custom instructions will replace the \"You are a helpful assistant\" part." | glow -
 }
 
 # Set defaults
 MODEL_CODE="gpt-4.1-nano"
 MODEL_ALIAS="nano"
 PROVIDER="openai"
-SYSTEM_INSTRUCTION="You are a helpful assistant."
+SYSTEM_INSTRUCTION="This is a one-shot prompt, so don't ask the user any follow-up questions. Simply provide a response to the user's question. The user provided this further instruction: "
+FURTHER_INSTRUCTION="You are a helpful assistant."
 MAX_TOKENS=1024
 
 while [[ $# -gt 0 ]]; do
@@ -52,7 +56,7 @@ while [[ $# -gt 0 ]]; do
         echo "Missing system instruction string argument."
         exit 1
       fi
-      SYSTEM_INSTRUCTION="$2"
+      FURTHER_INSTRUCTION="$2"
       shift 2
       ;;
     -t|--maxtokens)
@@ -86,7 +90,7 @@ openai_request() {
     -d "{
           \"model\": \"$MODEL_CODE\",
           \"input\": \"$QUESTION\",
-          \"instructions\": \"$SYSTEM_INSTRUCTION\",
+          \"instructions\": \"$SYSTEM_INSTRUCTION $FURTHER_INSTRUCTION\",
           \"max_output_tokens\": $MAX_TOKENS
         }"
   )
@@ -101,7 +105,7 @@ anthropic_request() {
     -d "{
           \"model\": \"$MODEL_CODE\",
           \"max_tokens\": $MAX_TOKENS,
-          \"system\": \"$SYSTEM_INSTRUCTION\",
+          \"system\": \"$SYSTEM_INSTRUCTION $FURTHER_INSTRUCTION\",
           \"messages\": [
             {
               \"role\": \"user\",
