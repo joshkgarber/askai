@@ -23,7 +23,7 @@ show_usage() {
 MODEL_CODE="gpt-4.1-nano"
 MODEL_ALIAS="nano"
 PROVIDER="openai"
-SYSTEM_INSTRUCTION="This is a one-shot prompt, so don't ask the user any follow-up questions. Simply provide a response to the user's question. The user provided this further instruction: "
+SYSTEM_INSTRUCTION="This is a one-shot prompt, so don't ask the user any follow-up questions. Simply provide a response to the user's question. The user provided this further instruction:"
 FURTHER_INSTRUCTION="You are a helpful assistant."
 MAX_TOKENS=1024
 
