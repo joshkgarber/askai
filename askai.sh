@@ -90,15 +90,17 @@ echo -e -n "\033[1mYour question:\033[0m "
 read -r -p "" QUESTION
 
 openai_request() {
+  payload=$(jq -n \
+    --arg model "$MODEL_CODE" \
+    --arg input "'$QUESTION'" \
+    --arg instructions "$SYSTEM_INSTRUCTION $FURTHER_INSTRUCTION" \
+    --argjson max_output_tokens "$MAX_TOKENS" \
+    '{model: $model, input: $input, instructions: $instructions, max_output_tokens: $max_output_tokens}'\
+  )
   local response=$(curl --silent https://api.openai.com/v1/responses \
     -H "Content-Type: application/json" \
     -H "Authorization: Bearer $OPENAI_API_KEY" \
-    -d "{
-          \"model\": \"$MODEL_CODE\",
-          \"input\": \"$QUESTION\",
-          \"instructions\": \"$SYSTEM_INSTRUCTION $FURTHER_INSTRUCTION\",
-          \"max_output_tokens\": $MAX_TOKENS
-        }"
+    -d "$payload"
   )
   echo "$response" | jq -r '.output[0].content[0].text'
 }
