@@ -14,6 +14,7 @@ show_usage() {
   echo -e "  \033[1mmini\033[0m    OpenAI ChatGPT 4.1 mini"
   echo -e "  \033[1mnano\033[0m    OpenAI ChatGPT 4.1 nano"
   echo -e "  \033[1mhaiku\033[0m   Anthropic Claude 4.5 haiku"
+  echo -e "  \033[1mmistral\033[0m Mistral Small"
   echo ""
   echo -e "\033[1;32mNote:\033[0m"
   echo -e "The default system instruction is: **\"This is a one-shot prompt, so don't ask the user any follow-up questions. Simply provide a response to the user's question. Further instructions: You are a helpful assistant.\"**\n\nYour custom instructions will replace the \"You are a helpful assistant\" part." | glow -
@@ -43,6 +44,10 @@ while [[ $# -gt 0 ]]; do
         "haiku")
           MODEL_CODE="claude-haiku-4-5"
           PROVIDER="anthropic"
+        ;;
+        "mistral")
+          MODEL_CODE="mistral-small"
+          PROVIDER="mistral"
         ;;
         *)
           echo "Unknown model alias: $2"
@@ -133,6 +138,35 @@ anthropic_request() {
 	echo "$response" | jq -r '.content[0].text'
 }
 
+mistral_request() {
+  payload=$(jq -n \
+    --arg model "$MODEL_CODE" \
+    --argjson max_tokens "$MAX_TOKENS" \
+    --arg system "$SYSTEM_INSTRUCTION $FURTHER_INSTRUCTION" \
+    --arg user_content "$QUESTION" \
+    '{
+      model: $model,
+      max_tokens: $max_tokens,
+      messages: [
+        {
+          role: "system",
+          content: $system
+        },
+        {
+          role: "user",
+          content: $user_content
+        }
+      ]
+    }'\
+  )
+  local response=$(curl --silent https://api.mistral.ai/v1/chat/completions \
+    -H "Content-Type: application/json" \
+    -H "Authorization: Bearer $MISTRAL_API_KEY" \
+    -d "$payload"
+  )
+  echo "$response" | jq -r '.choices[0].message.content'
+}
+
 RESPONSE=""
 case $PROVIDER in
   "openai")
@@ -140,6 +174,9 @@ case $PROVIDER in
     ;;
   "anthropic")
     RESPONSE=$(anthropic_request)
+    ;;
+  "mistral")
+    RESPONSE=$(mistral_request)
     ;;
   *)
     echo "Unknown provider: $PROVIDER"
