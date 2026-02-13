@@ -10,6 +10,7 @@ show_usage() {
   echo -e "  \033[1m-i --instruct\033[0m <string>     set system instructions (see note below)"
   echo -e "  \033[1m-t --maxtokens\033[0m <integer>   set the max tokens for the response (default: \033[1m1024\033[0m)"
   echo -e "  \033[1m-f --file\033[0m <path>           attach file contents to the prompt (can be used multiple times)"
+  echo -e "  \033[1m-o --output\033[0m <path>         save response to file instead of displaying"
   echo ""
   echo -e "\033[1;32mModels:\033[0m"
   echo -e "  \033[1mmini\033[0m    OpenAI ChatGPT 4.1 mini"
@@ -25,6 +26,10 @@ show_usage() {
   echo -e "  $0 -f script.py \"What does this script do?\""
   echo -e "  $0 -f main.py -f utils.py \"Find bugs in these files\""
   echo -e "  $0 -m haiku -f config.json \"Explain this configuration\""
+  echo ""
+  echo -e "\033[1;32mFile Output Examples:\033[0m"
+  echo -e "  $0 -o response.txt \"Explain quantum computing\""
+  echo -e "  $0 -f code.py -o analysis.md \"Review this code\""
 }
 
 # Set defaults
@@ -36,6 +41,7 @@ FURTHER_INSTRUCTION="You are a helpful assistant."
 MAX_TOKENS=1024
 FILE_PATHS=()
 VALID_FILE_PATHS=()  # Track files that pass validation
+OUTPUT_FILE=""
 
 # File size limits (in bytes)
 MAX_FILE_SIZE=$((100 * 1024))      # 100KB per file
@@ -97,6 +103,14 @@ while [[ $# -gt 0 ]]; do
       FILE_PATHS+=("$2")
       shift 2
       ;;
+    -o|--output)
+      if [[ -z "$2" ]]; then
+        echo "Missing output file path argument."
+        exit 1
+      fi
+      OUTPUT_FILE="$2"
+      shift 2
+      ;;
     --help)
       show_usage
       exit 0
@@ -107,6 +121,35 @@ while [[ $# -gt 0 ]]; do
       ;;
   esac
 done
+
+# Validate output file path if provided
+validate_output_path() {
+  local output_path="$1"
+  local output_dir=$(dirname "$output_path")
+
+  # Check if directory exists
+  if [[ ! -d "$output_dir" ]]; then
+    echo "Error: Output directory does not exist: $output_dir"
+    exit 1
+  fi
+
+  # Check if directory is writable
+  if [[ ! -w "$output_dir" ]]; then
+    echo "Error: Output directory is not writable: $output_dir"
+    exit 1
+  fi
+
+  # Check if file exists and warn user
+  if [[ -f "$output_path" ]]; then
+    echo "Warning: Output file already exists and will be overwritten: $output_path"
+    read -p "Continue? (y/N): " -n 1 -r
+    echo
+    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+      echo "Operation cancelled."
+      exit 0
+    fi
+  fi
+}
 
 # Validate and read files
 validate_and_read_files() {
@@ -240,6 +283,11 @@ if [[ ${#FILE_PATHS[@]} -gt 0 ]]; then
   validate_and_read_files
 fi
 
+# Validate output path if provided
+if [[ -n "$OUTPUT_FILE" ]]; then
+  validate_output_path "$OUTPUT_FILE"
+fi
+
 echo -e -n "\033[1mConfig:\033[0m"
 echo -e "\
 | **Option** | **Value** |\n \
@@ -247,7 +295,8 @@ echo -e "\
 | model | $MODEL_CODE |\n \
 | max tokens | $MAX_TOKENS |\n \
 | instruction | $FURTHER_INSTRUCTION |\n \
-| files | $(build_files_display) | \
+| files | $(build_files_display) |\n \
+| output | ${OUTPUT_FILE:-stdout} | \
 " | glow -
 echo -e -n "\033[1mYour question:\033[0m "
 read -r -p "" QUESTION
@@ -371,5 +420,17 @@ case $PROVIDER in
     ;;
 esac
 
-echo -e "\n\033[1m$MODEL_ALIAS's response:\033[0m"
-echo "$RESPONSE" | glow -
+# Output response to file or stdout
+if [[ -n "$OUTPUT_FILE" ]]; then
+  echo "$RESPONSE" > "$OUTPUT_FILE"
+  echo -e "\n\033[1;32m✓ Response saved to:\033[0m $OUTPUT_FILE"
+  echo ""
+  echo -e "\033[2mPreview:\033[0m"
+  head -n 5 "$OUTPUT_FILE" | glow -
+  if [[ $(wc -l < "$OUTPUT_FILE") -gt 5 ]]; then
+    echo -e "\033[2m... (file continues)\033[0m"
+  fi
+else
+  echo -e "\n\033[1m$MODEL_ALIAS's response:\033[0m"
+  echo "$RESPONSE" | glow -
+fi
