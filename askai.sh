@@ -15,6 +15,7 @@ show_usage() {
   echo -e "  \033[1mmini\033[0m    OpenAI ChatGPT 4.1 mini"
   echo -e "  \033[1mnano\033[0m    OpenAI ChatGPT 4.1 nano"
   echo -e "  \033[1mhaiku\033[0m   Anthropic Claude 4.5 haiku"
+  echo -e "  \033[1msonnet\033[0m  Anthropic Claude 3.5 sonnet"
   echo -e "  \033[1mmistral\033[0m Mistral Small"
   echo ""
   echo -e "\033[1;32mNote:\033[0m"
@@ -55,6 +56,10 @@ while [[ $# -gt 0 ]]; do
         ;;
         "haiku")
           MODEL_CODE="claude-haiku-4-5"
+          PROVIDER="anthropic"
+        ;;
+        "sonnet")
+          MODEL_CODE="claude-sonnet-4-5"
           PROVIDER="anthropic"
         ;;
         "mistral")
